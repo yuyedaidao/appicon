@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"fmt"
+	"image/png"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -26,6 +27,14 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		fmt.Println(path)
+		file, err := os.Open(path)
+		if err != nil {
+			cmd.PrintErrln(err)
+			return
+		}
+		img, err := png.Decode(file)
+		file.Close()
+		fmt.Println(img.Bounds())
 	},
 }
 
