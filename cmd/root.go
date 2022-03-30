@@ -5,12 +5,20 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"image"
 	"image/png"
+	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
+
+type AIValue map[string]interface{}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -26,15 +34,59 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 			return
 		}
-		fmt.Println(path)
+		if path == "" {
+			cmd.PrintErrln(errors.New("no such file or directory"))
+			os.Exit(1)
+			return
+		}
 		file, err := os.Open(path)
 		if err != nil {
 			cmd.PrintErrln(err)
+			os.Exit(1)
 			return
 		}
 		img, err := png.Decode(file)
 		file.Close()
-		fmt.Println(img.Bounds())
+		if err != nil {
+			cmd.PrintErrln(err)
+			os.Exit(1)
+			return
+		}
+		bounds := img.Bounds()
+		if (bounds.Max != image.Point{1024, 1024}) {
+			cmd.PrintErrln(errors.New("The size of the image must be 1024 * 1024"))
+			os.Exit(1)
+			return
+		}
+		data, err := ioutil.ReadFile("cmd/Contents.json")
+		if err != nil {
+			cmd.PrintErrln(err)
+			os.Exit(1)
+			return
+		}
+		var contents map[string]interface{}
+		if err := json.Unmarshal(data, &contents); err != nil {
+			cmd.PrintErrln(err)
+			os.Exit(1)
+			return
+		}
+		images := contents["images"].([]interface{})
+		for _, image := range images {
+			item := image.(map[string]interface{})
+			filename := item["filename"].(string)
+			fmt.Printf(filename)
+			size := item["size"].(string)
+			width, _ := strconv.ParseFloat(strings.Split(size, "x")[0], 64)
+			fmt.Printf(" %f ", width)
+			scale := item["scale"].(string)
+			multiple, _ := strconv.Atoi(scale[:len(scale) - 1])
+			fmt.Println(multiple)
+			realSize := uint(width * float64(multiple))
+			fmt.Println(realSize)
+		}
+		// resize.Resize()
+		
+
 	},
 }
 
@@ -56,7 +108,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("version", "v", false, "Version information")
+	rootCmd.Flags().BoolP("version", "v", false, "version information")
 	rootCmd.Flags().StringP("path", "p", "", "path of image")
 	rootCmd.Flags().StringP("output", "o", "", "output path of AppIcon.appiconset  (default current directory)")
 }
