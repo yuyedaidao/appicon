@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nfnt/resize"
 	"github.com/spf13/cobra"
 )
 
@@ -58,6 +59,22 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 			return
 		}
+		// 删除已存在的AppIcon.xcassets
+		output, err := cmd.Flags().GetString("output")
+		if err != nil {
+			output = "./"
+		}
+		if !strings.HasSuffix(output, "/") {
+			output = output + "/"
+		}
+		appiconset := output + "AppIcon.appiconset"
+		os.RemoveAll(appiconset)
+		fmt.Printf("make directory: %s\n", appiconset)
+		if err := os.Mkdir(appiconset, os.ModePerm); err != nil {
+			cmd.PrintErrln(err)
+			os.Exit(1)
+			return
+		}
 		data, err := ioutil.ReadFile("cmd/Contents.json")
 		if err != nil {
 			cmd.PrintErrln(err)
@@ -74,19 +91,36 @@ var rootCmd = &cobra.Command{
 		for _, image := range images {
 			item := image.(map[string]interface{})
 			filename := item["filename"].(string)
-			fmt.Printf(filename)
 			size := item["size"].(string)
 			width, _ := strconv.ParseFloat(strings.Split(size, "x")[0], 64)
-			fmt.Printf(" %f ", width)
 			scale := item["scale"].(string)
 			multiple, _ := strconv.Atoi(scale[:len(scale) - 1])
-			fmt.Println(multiple)
 			realSize := uint(width * float64(multiple))
-			fmt.Println(realSize)
+			newImage := resize.Resize(realSize, realSize, img, resize.Lanczos3)
+			filePath := appiconset + "/" + filename
+			fmt.Printf("create image %s\n", filename)
+			out, err := os.Create(filePath)
+			if err != nil {
+				cmd.PrintErrln(err)
+				os.Exit(1)
+				return
+			}
+			if err := png.Encode(out, newImage); err != nil {
+				out.Close()
+				cmd.PrintErrln(err)
+				os.Exit(1)
+				return
+			}
+			out.Close()
 		}
-		// resize.Resize()
-		
-
+		fmt.Println("copy Contents.json to AppIcon.appiconset")
+		jsonPath := output + "AppIcon.appiconset/Contents.json"
+		if err := ioutil.WriteFile(jsonPath, data, 0644); err != nil {
+			cmd.PrintErrln(err)
+				os.Exit(1)
+				return
+		}
+		fmt.Println("created appiconset successfuly")
 	},
 }
 
