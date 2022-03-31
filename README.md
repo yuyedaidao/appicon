@@ -6,4 +6,4 @@
     
 # Use
 
-     appicon -p icon.png
+    appicon -p icon.png
