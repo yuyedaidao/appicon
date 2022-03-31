@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
+Copyright © 2022 yuyedaidao <wyqpadding@gmail.com>
 
 */
 package cmd
@@ -18,9 +18,130 @@ import (
 	"github.com/nfnt/resize"
 	"github.com/spf13/cobra"
 )
-
-type AIValue map[string]interface{}
-
+const appiconsetContents string = `
+{
+    "images" : [
+      {
+        "filename" : "icon-20@2x.png",
+        "idiom" : "iphone",
+        "scale" : "2x",
+        "size" : "20x20"
+      },
+      {
+        "filename" : "icon-20@3x.png",
+        "idiom" : "iphone",
+        "scale" : "3x",
+        "size" : "20x20"
+      },
+      {
+        "filename" : "icon-29.png",
+        "idiom" : "iphone",
+        "scale" : "1x",
+        "size" : "29x29"
+      },
+      {
+        "filename" : "icon-29@2x.png",
+        "idiom" : "iphone",
+        "scale" : "2x",
+        "size" : "29x29"
+      },
+      {
+        "filename" : "icon-29@3x.png",
+        "idiom" : "iphone",
+        "scale" : "3x",
+        "size" : "29x29"
+      },
+      {
+        "filename" : "icon-40@2x.png",
+        "idiom" : "iphone",
+        "scale" : "2x",
+        "size" : "40x40"
+      },
+      {
+        "filename" : "icon-40@3x.png",
+        "idiom" : "iphone",
+        "scale" : "3x",
+        "size" : "40x40"
+      },
+      {
+        "filename" : "icon-60@2x.png",
+        "idiom" : "iphone",
+        "scale" : "2x",
+        "size" : "60x60"
+      },
+      {
+        "filename" : "icon-60@3x.png",
+        "idiom" : "iphone",
+        "scale" : "3x",
+        "size" : "60x60"
+      },
+      {
+        "filename" : "icon-20-ipad.png",
+        "idiom" : "ipad",
+        "scale" : "1x",
+        "size" : "20x20"
+      },
+      {
+        "filename" : "icon-20@2x-ipad.png",
+        "idiom" : "ipad",
+        "scale" : "2x",
+        "size" : "20x20"
+      },
+      {
+        "filename" : "icon-29-ipad.png",
+        "idiom" : "ipad",
+        "scale" : "1x",
+        "size" : "29x29"
+      },
+      {
+        "filename" : "icon-29@2x-ipad.png",
+        "idiom" : "ipad",
+        "scale" : "2x",
+        "size" : "29x29"
+      },
+      {
+        "filename" : "icon-40.png",
+        "idiom" : "ipad",
+        "scale" : "1x",
+        "size" : "40x40"
+      },
+      {
+        "filename" : "icon-40@2x.png",
+        "idiom" : "ipad",
+        "scale" : "2x",
+        "size" : "40x40"
+      },
+      {
+        "filename" : "icon-76.png",
+        "idiom" : "ipad",
+        "scale" : "1x",
+        "size" : "76x76"
+      },
+      {
+        "filename" : "icon-76@2x.png",
+        "idiom" : "ipad",
+        "scale" : "2x",
+        "size" : "76x76"
+      },
+      {
+        "filename" : "icon-83.5@2x.png",
+        "idiom" : "ipad",
+        "scale" : "2x",
+        "size" : "83.5x83.5"
+      },
+      {
+        "filename" : "icon-1024.png",
+        "idiom" : "ios-marketing",
+        "scale" : "1x",
+        "size" : "1024x1024"
+      }
+    ],
+    "info" : {
+      "author" : "appicon",
+      "version" : 1
+    }
+  }
+`
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "appicon",
@@ -64,6 +185,9 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			output = "./"
 		}
+		if output == "" {
+			output = "./"
+		}
 		if !strings.HasSuffix(output, "/") {
 			output = output + "/"
 		}
@@ -75,12 +199,7 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 			return
 		}
-		data, err := ioutil.ReadFile("cmd/Contents.json")
-		if err != nil {
-			cmd.PrintErrln(err)
-			os.Exit(1)
-			return
-		}
+		data := []byte(appiconsetContents)
 		var contents map[string]interface{}
 		if err := json.Unmarshal(data, &contents); err != nil {
 			cmd.PrintErrln(err)
